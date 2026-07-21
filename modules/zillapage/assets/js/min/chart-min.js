@@ -1,0 +1,1 @@
+$(function(){"use strict";var t=Highcharts.chart("chart",{chart:{type:"areaspline"},title:{text:""},xAxis:{},yAxis:{title:{text:""}},series:[{name:"Earning",data:[0,4,3,4,17,10,30,44,33]}]})});

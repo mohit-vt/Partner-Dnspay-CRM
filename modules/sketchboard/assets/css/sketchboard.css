@@ -1,0 +1,18 @@
+.help-icon,[title='Library'],.main-menu-trigger,.App-toolbar__extra-tools-trigger{
+    display: none !important;
+}
+.btn_full_screen{
+    padding: 10px;
+}
+#excalidraw-wrapper{
+    height: calc(100vh - 200px);
+}
+#full_screen:-webkit-full-screen #excalidraw-wrapper{
+    height: calc(100vh - 130px);
+}
+.HelpDialog__btn{
+    display: none !important;
+}
+
+
+

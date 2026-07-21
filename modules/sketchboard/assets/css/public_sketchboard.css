@@ -1,0 +1,49 @@
+
+
+#public-excalidraw-wrapper{
+    height: calc(100vh - 130px);
+}
+#full_screen:-webkit-full-screen #public-excalidraw-wrapper{
+    height: calc(100vh - 130px);
+}
+.public_view{
+    background: #eee;
+    padding: 10px;
+}
+.HelpDialog__btn{
+    display: none !important;
+}
+.help-icon,[title='Library'],.main-menu-trigger,.App-toolbar__extra-tools-trigger{
+    display: none !important;
+}
+.p-0{
+    padding: 0 !important;
+}
+.topbar{
+    display: flex;
+    justify-content: space-between;
+}
+.btn {
+    display: inline-block;
+    margin-bottom: 0;
+    font-weight: 400;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    -ms-touch-action: manipulation;
+    touch-action: manipulation;
+    cursor: pointer;
+    background-image: none;
+    border: 1px solid transparent;
+    padding: 6px 12px;
+    font-size: 14px;
+    line-height: 1.42857143;
+    border-radius: 4px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+.btn_full_screen{
+    padding: 6px 12px;
+}

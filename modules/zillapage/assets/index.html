@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <!-- start linking  -->
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+    <link href="https://use.fontawesome.com/releases/v5.0.4/css/all.css" rel="stylesheet">
+    <link rel="icon" href="img/favicon.png" type="image/png">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/app.css">
+    <!-- end linking -->
+    <title>Documentation - “PerfexLanding module for Perfex CRM”</title>
+  </head>
+  <body>
+    <!-- start admin -->
+    <section id="admin">
+      <!-- start sidebar -->
+      <div class="sidebar">
+        <!-- start with head -->
+        <div class="head">
+          <div class="logo">
+              <a href="#">
+                <h3>PerfexLanding</h3>
+              </a>
+          </div>
+        </div>
+        <!-- end with head -->
+        <!-- start the list -->
+        <div id="list">
+          <ul class="nav flex-column">
+            <li class="nav-item"><a href="#installation" class="nav-link active"><i class="fa fa-adjust"></i>Install and active module</a></li>
+            <li class="nav-item"><a href="#upgrade" class="nav-link active"><i class="fa fa-adjust"></i>How to upgrade</a></li>
+            <li class="nav-item"><a href="#faqs" class="nav-link active"><i class="fa fa-adjust"></i> FAQs</a></li>
+          </ul>
+        </div>
+        <!-- end the list -->
+      </div>
+      <!-- end sidebar -->
+      <!-- start content -->
+      <div class="content">
+        <div id="doc">
+          <section id="installation">
+            <h1 class="mb-4">Step by step installation</h1>
+            <ol>
+              <li>Extract your downloaded file contens. You will notice a folder called "documentation" and a new zip file, called "upload.zip". We will focus on the "upload.zip" file
+                <div class="img"><img src="img/extract_file.png" alt=""></div>
+              </li>
+              <li>Go to your Perfex CRM's Admin area and select the following menu item: SETUP > MODULES
+                <div class="img"><img src="img/upload_module.png" alt=""></div>
+              </li>
+              <li>Find the newly installed module and press ACTIVATE
+                <div class="img"><img src="img/active_module.png" alt=""></div>
+              </li>
+              
+            </ol>
+          </section>
+          <section id="upgrade">
+            <h1 class="head">Upgrade Module</h1>
+            <p>Download upgrade file from Codecanyon</p>
+            <p>Select upload module</p>
+            <p>If the version you have downloaded is larger than the current version, please click UPGRADE DATABASE (if available)</strong></p>
+            <div class="img"><img src="img/upgrade_module.png" alt=""></div>
+          </section>
+          <section id="faqs">
+            <h1 class="head">FAQS</h1>
+            <h4 class="mb-4 text-primary">1. I get an error when I try to upload the module at SETUP > MODULES</h4>
+            <p class="font-italic leads">Hi, Maybe the problem is with the file <strong>upload_max_filesize</strong>, <strong>post_max_size</strong> of PHP. You can activate it manually by unzipping the module files (PerfexLanding) inside the ”/modules” folder of source code PerfexCRM <br>=> Then activate the module at module manager</p>
+          </section>
+      </div>
+    </div>
+    <!-- end admin -->
+    <script src="js/jquery.min.js"></script>
+    <script src="js/tether.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/app.js"></script>
+    <!-- end screpting -->
+  </body>
+</html>

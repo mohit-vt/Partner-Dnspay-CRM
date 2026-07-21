@@ -1,0 +1,182 @@
+.min-width-200px{
+	min-width: 200px !important;
+}
+
+ /* Đặt kiểu cho tiêu đề */
+.country-title {
+    font-weight: bold;
+    color: #333;
+    margin: 0;
+    padding: 15px;
+    background-color: #4CAF50;
+    color: white;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+/* Đặt kiểu cho danh sách */
+.country-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+.country-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #e0e0e0;
+    transition: background-color 0.3s;
+}
+.country-list li:last-child {
+    border-bottom: none;
+}
+.country-list li:hover {
+    background-color: #f0f0f0;
+}
+.country-name {
+    font-size: 16px;
+    color: #333;
+    font-weight: bold;
+}
+.country-count {
+    font-size: 14px;
+    color: #888;
+    font-weight: normal;
+}
+
+.facebook-dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* Mỗi dòng có 4 thẻ */
+    gap: 20px;
+}
+
+.instagram-dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr); /* Mỗi dòng có 4 thẻ */
+    gap: 20px;
+}
+
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+.stat-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+}
+.stat-value {
+    font-size: 32px;
+    font-weight: bold;
+    color: #4CAF50;
+}
+.stat-description {
+    font-size: 14px;
+    color: #888;
+    margin-top: 8px;
+}
+/* Điều chỉnh responsive */
+@media (max-width: 800px) {
+    .facebook-dashboard-stats,.instagram-dashboard-stats{
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+@media (max-width: 500px) {
+    .facebook-dashboard-stats,.instagram-dashboard-stats{
+        grid-template-columns: 1fr;
+    }
+}
+
+.loader-action {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border: 5px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 5px solid #3498db;
+  width: 40px;
+  height: 40px;
+  -webkit-animation: spin 2s linear infinite; /* Safari */
+  animation: spin 2s linear infinite;
+}
+
+.stat-value-danger {
+    font-size: 16px;
+    font-weight: bold;
+    color: #FF0000;
+}
+
+.stat-value-success {
+    font-size: 16px;
+    font-weight: bold;
+    color: #4CAF50;
+}
+
+.stat-card {
+    position: relative;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  transition: transform 0.2s ease-in-out;
+}
+
+/* Styling the icon */
+.stat-card .icon {
+    padding: 5px;
+  font-size: 32px;
+  color: #4CAF50; /* Customize as desired */
+}
+
+/* Styling the text */
+.stat-card .stat-info h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+}
+.stat-card .stat-info p {
+  margin: 5px 0 0;
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+}
+
+.tooltip-container {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+/* Tooltip icon styling - always visible */
+.tooltip-icon {
+  font-size: 16px;
+  color: #999;
+}
+
+/* Tooltip text styling */
+.tooltip-text {
+  visibility: hidden;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  padding: 5px;
+  border-radius: 4px;
+  position: absolute;
+  top: -5px;
+  right: 25px;
+  z-index: 1;
+  width: 150px;
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+/* Show tooltip on hover */
+.tooltip-container:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
