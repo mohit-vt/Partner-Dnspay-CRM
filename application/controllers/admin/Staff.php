@@ -44,41 +44,56 @@ class Staff extends AdminController
 
             $data['password'] = $this->input->post('password', false);
 
-             if ($id == '') {
-           		// Get Agent roleid from roles table
-                $this->db->select('roleid');
-                $this->db->from('tblroles');
-                $this->db->where('name', 'agent');  // case sensitive, check DB
-                $agentRole = $this->db->get()->row();
+if ($id == '') {
+    // Every role gets a unique system-generated ID except Platform Administrator and Office Manager.
+    $this->db->select('name');
+    $this->db->from('tblroles');
+    $this->db->where('roleid', $data['role']);
+    $selectedRole = $this->db->get()->row();
 
-         		// Only generate agent_id if staff role is "agent"
-                if ($agentRole && $data['role'] == $agentRole->roleid) {
-                    $this->db->select('agent_id');
-                    $this->db->from('tblstaff');
-                    $this->db->where('role', $agentRole->roleid);
-                    $this->db->order_by('staffid', 'DESC');
-                    $this->db->limit(1);
-                    $lastAgent = $this->db->get()->row();
+    $excluded_roles = ['platform administrator', 'office manager'];
+    $role_name = $selectedRole ? strtolower(trim($selectedRole->name)) : '';
 
-                    if ($lastAgent && is_numeric($lastAgent->agent_id)) {
-                        $nextId = intval($lastAgent->agent_id) + 1;
-                    } else {
-                        $nextId = 1;
-                    }
+    if ($selectedRole && !in_array($role_name, $excluded_roles)) {
+        // One shared counter across ALL non-excluded roles — not scoped to a single role.
+        $excluded_roleids = [];
+        $this->db->select('roleid');
+        $this->db->from('tblroles');
+        $this->db->where_in('LOWER(name)', $excluded_roles);
+        $excludedRoleRows = $this->db->get()->result();
+        foreach ($excludedRoleRows as $row) {
+            $excluded_roleids[] = $row->roleid;
+        }
 
-                    $data['agent_id'] = str_pad($nextId, 7, '0', STR_PAD_LEFT);
-                }
+        $this->db->select('agent_id');
+        $this->db->from('tblstaff');
+        if (!empty($excluded_roleids)) {
+            $this->db->where_not_in('role', $excluded_roleids);
+        }
+        $this->db->where('agent_id IS NOT NULL', null, false);
+        $this->db->order_by('CAST(agent_id AS UNSIGNED)', 'DESC');
+        $this->db->limit(1);
+        $lastAgent = $this->db->get()->row();
 
-                if (staff_cant('create', 'staff')) {
-                    access_denied('staff');
-                }
-                $id = $this->staff_model->add($data);
-                if ($id) {
-                    handle_staff_profile_image_upload($id);
-                    set_alert('success', _l('added_successfully', _l('staff_member')));
-                    redirect(admin_url('staff/member/' . $id));
-                }
-            } else {
+        if ($lastAgent && is_numeric($lastAgent->agent_id)) {
+            $nextId = intval($lastAgent->agent_id) + 1;
+        } else {
+            $nextId = 1;
+        }
+
+        $data['agent_id'] = str_pad($nextId, 7, '0', STR_PAD_LEFT);
+    }
+
+    if (staff_cant('create', 'staff')) {
+        access_denied('staff');
+    }
+    $id = $this->staff_model->add($data);
+    if ($id) {
+        handle_staff_profile_image_upload($id);
+        set_alert('success', _l('added_successfully', _l('staff_member')));
+        redirect(admin_url('staff/member/' . $id));
+    }
+	}else {
                 if (staff_cant('edit', 'staff')) {
                     access_denied('staff');
                 }
