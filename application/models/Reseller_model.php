@@ -113,32 +113,44 @@ public function get_agent_overviews($agent_id)
 //     ];
 // }
   
-    public function get_all_resellers()
+  public function get_all_resellers()
 {
     // Fetch resellers from reseller table (your external/linked DB)
     $resellers = $this->db->get('resellers')->result_array();
-      
+
     // Set default status for resellers
     foreach ($resellers as &$reseller) {
         $reseller['status'] = $reseller['status'] ?? 'Pending';
     }
 
-
     // Connect to default Perfex database for staff/agents
     $default_db = $this->load->database('default', TRUE);
-    $default_db->select('staff.staffid, staff.firstname,staff.agent_id, staff.lastname, staff.email, staff.datecreated,staff.active,staff.user_status,roles.name as role_name')
-               ->from('staff')
-               ->join('roles', 'roles.roleid = staff.role')
-               ->where('roles.name', 'agent');
-    $agents = $default_db->get()->result_array();
 
+    // Every role except Platform Administrator and Office Manager counts as an "agent"
+    // for this listing — same exclusion rule used for Agent ID generation.
+    $excluded_roles = ['platform administrator', 'office manager'];
+
+    $default_db->select('roleid')
+               ->from('roles')
+               ->where_in('LOWER(name)', $excluded_roles);
+    $excludedRoleRows = $default_db->get()->result();
+    $excluded_roleids = array_map(fn($r) => $r->roleid, $excludedRoleRows);
+
+    $default_db->select('staff.staffid, staff.firstname, staff.agent_id, staff.lastname, staff.email, staff.datecreated, staff.active, staff.user_status, roles.name as role_name')
+               ->from('staff')
+               ->join('roles', 'roles.roleid = staff.role');
+
+    if (!empty($excluded_roleids)) {
+        $default_db->where_not_in('staff.role', $excluded_roleids);
+    }
+
+    $agents = $default_db->get()->result_array();
 
     return [
         'resellers' => $resellers,
         'agents'    => $agents
     ];
 }
-
 
   
     public function get_resellers_by_user_id($id)
