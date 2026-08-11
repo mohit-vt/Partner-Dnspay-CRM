@@ -5,30 +5,68 @@ defined('BASEPATH') or exit('No direct script access allowed');
 class Dashboard extends AdminController
 {
   
-    public function __construct()
-    {
-        parent::__construct();
-        $this->load->model('dashboard_model');
 
-        $staff_id = get_staff_user_id();
+    // public function __construct()
+    // {
+    //     parent::__construct();
+    //     $this->load->model('dashboard_model');
 
-        if (!$staff_id) {
-            set_alert('warning', 'You have been logged out.');
-            redirect(site_url('authentication'));
-        }
+    //     $staff_id = get_staff_user_id();
 
-        $staff = $this->staff_model->get($staff_id);
-        $role  = $this->roles_model->get($staff->role ?? 0);
-        $role_name = strtolower(trim($role->name ?? ''));
+    //     if (!$staff_id) {
+    //         set_alert('warning', 'You have been logged out.');
+    //         redirect(site_url('authentication'));
+    //     }
 
-        if ($role_name === 'agent' && $this->router->fetch_class() === 'dashboard') {
-            return $this->reseller_dashboard($staff_id);
-        }
+    //     $staff = $this->staff_model->get($staff_id);
+    //     $role  = $this->roles_model->get($staff->role ?? 0);
+    //     $role_name = strtolower(trim($role->name ?? ''));
+
+    //     if ($role_name === 'agent' && $this->router->fetch_class() === 'dashboard') {
+    //         return $this->reseller_dashboard($staff_id);
+    //     }
+    // }
+  
+  public function __construct()
+{
+    parent::__construct();
+    $this->load->model('dashboard_model');
+
+    $staff_id = get_staff_user_id();
+
+    if (!$staff_id) {
+        set_alert('warning', 'You have been logged out.');
+        redirect(site_url('authentication'));
     }
+
+    $staff = $this->staff_model->get($staff_id);
+    $role  = $this->roles_model->get($staff->role ?? 0);
+    $role_name = strtolower(trim($role->name ?? ''));
+
+    // Only Platform Administrator (or is_admin()) sees the real admin dashboard.
+    // Everyone else goes to the reseller dashboard, by default — not by whitelist.
+    if (!is_admin() && $role_name !== 'platform administrator' && $this->router->fetch_class() === 'dashboard') {
+        return $this->reseller_dashboard($staff_id);
+    }
+}
 
     // This is admin dashboard view
     public function index()
     {
+      
+      	        $this->load->model('staff_model');
+        $this->load->model('roles_model');
+
+        $staff_id = get_staff_user_id();
+        $staff = $this->staff_model->get($staff_id);
+        $role = $this->roles_model->get($staff->role ?? 0);
+
+        $role_name = strtolower(trim($role->name ?? ''));
+        $context   = $this->session->userdata('login_context') ?? '';
+
+    if ($context === 'reseller' || (!is_admin() && $role_name !== 'platform administrator')) {
+        return $this->reseller_dashboard($staff_id);
+    }
         close_setup_menu();
         $this->load->model('departments_model');
         $this->load->model('todo_model');
@@ -100,19 +138,7 @@ class Dashboard extends AdminController
         }
 
         $data = hooks()->apply_filters('before_dashboard_render', $data);
-        $this->load->model('staff_model');
-        $this->load->model('roles_model');
 
-        $staff_id = get_staff_user_id();
-        $staff = $this->staff_model->get($staff_id);
-        $role = $this->roles_model->get($staff->role ?? 0);
-
-        $role_name = strtolower(trim($role->name ?? ''));
-        $context   = $this->session->userdata('login_context') ?? '';
-
-        if ($context === 'reseller' || in_array($role_name, ['reseller', 'agent', 'partner admin', 'management', 'relationship management team'])) {
-            return $this->reseller_dashboard($staff_id);
-        }
 
         $this->load->view('admin/dashboard/dashboard', $data);
 
