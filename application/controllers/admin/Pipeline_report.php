@@ -501,6 +501,38 @@ public function archived()
 
     if ($this->input->post()) {
         $post_data = $this->input->post(null, true);
+        // Normalize commission split fields during update
+        $post_data['commission_is_split'] =
+            $this->input->post('commission_is_split') == '1' ? 1 : 0;
+
+        $post_data['commission_split_with_anybody'] =
+            $this->input->post('commission_split_with_anybody', true) === 'Yes'
+                ? 'Yes'
+                : 'No';
+
+        $post_data['commission_split_person_name'] = trim(
+            (string) $this->input->post(
+                'commission_split_person_name',
+                true
+            )
+        );
+
+        if ($post_data['commission_split_with_anybody'] === 'Yes') {
+            $post_data['commission_is_split'] = 1;
+
+            if ($post_data['commission_split_person_name'] === '') {
+                set_alert(
+                    'danger',
+                    'Please enter the name of the person receiving the commission split.'
+                );
+
+                redirect(admin_url('pipeline_report/update/' . $id));
+                return;
+            }
+        } else {
+            $post_data['commission_split_person_name'] = null;
+        }
+      	//Ends the Normalize commission
         $upload_path = 'uploads/pipeline_docs/';
         $unique_code = str_pad($id, 7, '0', STR_PAD_LEFT);
 
@@ -512,7 +544,7 @@ public function archived()
         $single_file_fields = [
             'kyc_kyb_docs', 'business_license',
             'articles_incorporation', 'utility_bill',
-            'refund_policy', 'dropbox_link', 'voided_check'
+            'refund_policy', 'dropbox_link', 'voided_check', 'aml'
         ];
 
         $file_data = [];
@@ -716,29 +748,110 @@ public function archived()
 
 
 
-        
         // Handle RDR field
-        $post_data['rdr'] = $this->input->post('rdr') ?? null;
+      $data['rdr'] = $this->input->post('rdr') ?? null;
 
-        $updated = $this->pipeline_report_model->update_pre_application($id, $data);
+      // Normalize commission fields during update
+      $data['commission_is_split'] =
+          $this->input->post('commission_is_split') == '1' ? 1 : 0;
 
-        if ($updated) {
-            set_alert('success', 'Application updated successfully.');
-        } else {
-            set_alert('danger', 'No changes made or update failed.');
-        }
+      $data['commission_split_with_anybody'] =
+          $this->input->post('commission_split_with_anybody', true) === 'Yes'
+              ? 'Yes'
+              : 'No';
 
-        redirect(admin_url('pipeline_report'));
-    }
+      $data['commission_split_person_name'] = trim(
+          (string) $this->input->post(
+              'commission_split_person_name',
+              true
+          )
+      );
 
-    // Load view data
-    $data['pipeline_report'] = $existing;
-    $data['staff_inhouse'] = $this->staff_model->get_employees_and_management();
-    $data['staff_agents'] = $this->staff_model->get_agents();
-    $data['title'] = 'Edit Pipeline Report';
+      if ($data['commission_split_with_anybody'] === 'Yes') {
+          $data['commission_is_split'] = 1;
 
-    $this->load->view('admin/pipeline_report/form', $data);
-}
+          if ($data['commission_split_person_name'] === '') {
+              set_alert(
+                  'danger',
+                  'Please enter the name of the person receiving the commission split.'
+              );
+
+              redirect(admin_url('pipeline_report/update/' . $id));
+              return;
+          }
+      } else {
+          $data['commission_split_person_name'] = null;
+      }
+      
+      
+      // Final cleanup before database update
+      unset(
+          $data[$this->security->get_csrf_token_name()],
+          $data['ci_csrf_token'],
+          $data['csrf_token'],
+          $data['submit_button'],
+          $data['remove_files']
+      );
+      
+      $agent_db = $this->load->database('agent_crm', true);
+      $allowed_fields = $agent_db->list_fields('pipeline_report');
+
+      $data = array_intersect_key(
+          $data,
+          array_flip($allowed_fields)
+      );
+
+      $updated = $this->pipeline_report_model
+          ->update_pre_application($id, $data);
+
+      if ($updated) {
+          set_alert(
+              'success',
+              'Application updated successfully.'
+          );
+      } else {
+          set_alert(
+              'danger',
+              'No changes made or update failed.'
+          );
+      }
+
+      redirect(admin_url('pipeline_report'));
+      return;
+      }
+
+      // GET request: display edit form
+      if (empty($existing)) {
+          show_404();
+          return;
+      }
+
+      $data = [];
+
+      $data['pipeline_report'] = $existing;
+
+      $data['staff_inhouse'] =
+          $this->staff_model->get_employees_and_management();
+
+      $data['staff_agents'] =
+          $this->staff_model->get_agents();
+
+      $data['countries'] = $this->db
+          ->order_by('short_name', 'ASC')
+          ->get('tblcountries')
+          ->result_array();
+
+      $data['mcc_codes'] =
+          $this->pipeline_report_model->get_all_mcc_codes();
+
+      $data['title'] = 'Edit Pipeline Report';
+
+      $this->load->view(
+          'admin/pipeline_report/view',
+          $data
+      );
+      }
+
   
   public function update_social_media()
 {
@@ -1176,7 +1289,7 @@ public function deleted_records()
         $last_id = $this->pipeline_report_model->get_pre_applications_id_max();
         $next_id = $last_id + 1; // Increment ID
         $unique_code = str_pad($next_id, 7, '0', STR_PAD_LEFT); // Format as 7-digit
-            $data = [
+        $data = [
                 'lead_source' => filter_var($this->input->post('lead_source', true), FILTER_SANITIZE_STRING),
                 'application_date'  => filter_var($this->input->post('application_date', true), FILTER_SANITIZE_STRING),
                 'application_ip' => $ip,
@@ -1224,6 +1337,19 @@ public function deleted_records()
                 'currency'  => filter_var($this->input->post('currency', true), FILTER_SANITIZE_STRING),
                 'processing_type'   => filter_var($this->input->post('processing_type', true), FILTER_SANITIZE_STRING),
                 'sales_type'    => filter_var($this->input->post('sales_type', true), FILTER_SANITIZE_STRING),
+              	'commission_is_split' => $this->input->post(
+                'commission_is_split'
+            ) == '1' ? 1 : 0,
+
+            'commission_split_with_anybody' => filter_var(
+                $this->input->post('commission_split_with_anybody', true),
+                FILTER_SANITIZE_STRING
+            ),
+
+            'commission_split_person_name' => filter_var(
+                $this->input->post('commission_split_person_name', true),
+                FILTER_SANITIZE_STRING
+            ),
                 'risk_category' => filter_var($this->input->post('risk_category', true), FILTER_SANITIZE_STRING),
                 'chargeback_percent'   => filter_var($this->input->post('chargeback_percent', true), FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION),
                 'mcc_code' => filter_var($this->input->post('mcc_code', true), FILTER_SANITIZE_STRING),
@@ -1259,12 +1385,42 @@ public function deleted_records()
                 'notes' => filter_var($this->input->post('notes', true), FILTER_SANITIZE_STRING),
               	'driving_license' => filter_var($this->input->post('driving_license', true), FILTER_SANITIZE_STRING),
                 'state_of_license' => filter_var($this->input->post('state_of_license', true), FILTER_SANITIZE_STRING),
-				'bank_location' => filter_var($this->input->post('bank_location', true), FILTER_SANITIZE_STRING), 
-
-                
+				'bank_location' => filter_var($this->input->post('bank_location', true), FILTER_SANITIZE_STRING),    
+          		'third_party_verification' => filter_var($this->input->post('third_party_verification', true), FILTER_SANITIZE_STRING),
+                'third_party_other' => filter_var($this->input->post('third_party_other', true), FILTER_SANITIZE_STRING),
+				'bank_address' => filter_var($this->input->post('bank_address', true), FILTER_SANITIZE_STRING),
+                'dropbox_link' => filter_var($this->input->post('dropbox_link', true),FILTER_SANITIZE_URL),
             ];
           
-          
+ 	// Normalize commission fields
+$data['commission_is_split'] =
+    !empty($data['commission_is_split']) ? 1 : 0;
+
+$data['commission_split_with_anybody'] =
+    $data['commission_split_with_anybody'] === 'Yes'
+        ? 'Yes'
+        : 'No';
+
+if ($data['commission_split_with_anybody'] === 'Yes') {
+    $data['commission_is_split'] = 1;
+
+    if (empty(trim($data['commission_split_person_name']))) {
+        set_alert(
+            'danger',
+            'Please enter the name of the person receiving the commission split.'
+        );
+
+        redirect(
+            $this->input->server('HTTP_REFERER')
+                ?: admin_url('pipeline_report/create')
+        );
+
+        return;
+    }
+} else {
+    $data['commission_split_person_name'] = null;
+}
+                        
           	if ($this->input->post('business_phone')) {
                 $clean_phone = preg_replace('/\D+/', '', $this->input->post('business_phone'));
                 $data['business_phone'] = $clean_phone;
@@ -1295,8 +1451,8 @@ public function deleted_records()
 
 
         // Handle File Uploads
-        $files = ['kyc_kyb_docs', 'business_license', 'articles_incorporation', 'utility_bill', 'refund_policy', 'dropbox_link','voided_check'];
-        $upload_path = 'uploads/business_merchant_docs/';
+        $files = ['kyc_kyb_docs','aml', 'business_license', 'articles_incorporation', 'utility_bill', 'refund_policy','voided_check'];
+        $upload_path = 'uploads/pipeline_docs/';
 
         // Ensure upload directory exists
         if (!is_dir($upload_path)) {
@@ -1340,7 +1496,7 @@ if (!empty($_FILES['upload_file']['name'][0])) {
         $_FILES['file']['error']    = $_FILES['upload_file']['error'][$i];
         $_FILES['file']['size']     = $_FILES['upload_file']['size'][$i];
 
-        $config['upload_path']   = 'uploads/merchant_docs/';
+        $config['upload_path']   = 'uploads/pipeline_docs/';
         $config['allowed_types'] = 'pdf|jpg|jpeg|png';
         $config['max_size']      = 2048;
         $config['file_name']     = $unique_code . '_' . time() . '_' . $_FILES['file']['name'];
@@ -1370,7 +1526,7 @@ if (!empty($_FILES['upload_file']['name'][0])) {
         $_FILES['file']['error']    = $_FILES['dropbox_files']['error'][$i];
         $_FILES['file']['size']     = $_FILES['dropbox_files']['size'][$i];
 
-        $config['upload_path']   = 'uploads/merchant_docs/';
+        $config['upload_path']   = 'uploads/pipeline_docs/';
         $config['allowed_types'] = 'pdf|jpg|jpeg|png';
         $config['max_size']      = 2048;
         $config['file_name']     = $unique_code . '_' . time() . '_' . $_FILES['file']['name'];
@@ -1391,15 +1547,23 @@ if (!empty($_FILES['upload_file']['name'][0])) {
         }
     }
    
-            // If there are validation errors, show messages and stop submission
-            if (!empty($errors)) {
-                foreach ($errors as $error) {
-                    set_alert('danger', $error);
-                }
-                redirect(admin_url('pipeline_report/form'));
-               // var_dump($error);
-                return;
-            }
+        if (!empty($errors)) {
+    foreach ($errors as $error) {
+        set_alert(
+            'danger',
+            is_array($error)
+                ? implode('<br>', $error)
+                : strip_tags($error)
+        );
+    }
+
+    redirect(
+        $this->input->server('HTTP_REFERER')
+            ?: admin_url('pipeline_report/create')
+    );
+
+    return;
+}
 
             // Insert Data
             $insert_id = $this->pipeline_report_model->add_pipeline_report($data);
@@ -1416,7 +1580,7 @@ if (!empty($_FILES['upload_file']['name'][0])) {
                         
         }
 
-        $this->load->view('pipeline_report/form', ['pre_application_id' => $data['pre_application_id']]);
+        //$this->load->view('pipeline_report/form', ['pre_application_id' => $data['pre_application_id']]);
       
     }
 
