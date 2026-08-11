@@ -129,15 +129,28 @@ public function reseller_list()
 
         $data['reseller_lists'] = $merged;
         $data['agent_map']      = $agent_map;
+        $data['self_agent']     = null; // Admin/Management view doesn't need the self-info card
 
     } else {
+        $this->load->model('reseller_model');
+
+        // Table stays scoped to only what THIS user actually submitted
         $data['reseller_lists'] = $this->reseller_model->get_resellers_by_user_id($user_id);
         $data['agent_map']      = [];
+
+        // Separate: the logged-in agent's own identity (Agent ID, status, etc.)
+        // shown as a standalone info card in the view, NOT merged into the table.
+        $data['self_agent'] = $this->db
+            ->select('staffid, firstname, lastname, email, agent_id, datecreated, user_status')
+            ->where('staffid', $user_id)
+            ->get(db_prefix().'staff')
+            ->row_array();
     }
 
+    $data['title'] = 'ISO/Reseller List';
     $this->load->view('admin/reseller/reseller_list', $data);
 }
-
+  
   public function view_agent_application()
 {
     if (!$this->input->is_ajax_request()) {
@@ -818,7 +831,8 @@ public function delete()
             'zip_code'          => filter_var($this->input->post('zip_code'), FILTER_SANITIZE_FULL_SPECIAL_CHARS),
             'country'          => filter_var($this->input->post('country'), FILTER_SANITIZE_FULL_SPECIAL_CHARS),
             'contact_person'     => filter_var($this->input->post('contact_person'), FILTER_SANITIZE_FULL_SPECIAL_CHARS),
-            'email'            => filter_var($this->input->post('email'), FILTER_VALIDATE_EMAIL) ?: null,
+            //'email'            => filter_var($this->input->post('email'), FILTER_VALIDATE_EMAIL) ?: null,
+         	'email' => filter_var(trim($this->input->post('email')), FILTER_VALIDATE_EMAIL) ?: null,
             'phone'            => filter_var($this->input->post('phone'), FILTER_SANITIZE_NUMBER_INT),
             'payout_method'    => filter_var($this->input->post('payout_method'), FILTER_SANITIZE_FULL_SPECIAL_CHARS),
             'bank_name'        => filter_var($this->input->post('bank_name'), FILTER_SANITIZE_FULL_SPECIAL_CHARS),
