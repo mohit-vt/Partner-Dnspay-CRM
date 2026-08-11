@@ -12,8 +12,8 @@
 
 .status-dropdown.pending {
     background-color: #ffc107; /* yellow */
-}ac
-  
+}
+
 .status-dropdown.onhold {
     background-color: #ffc107; /* yellow */
 }
@@ -25,14 +25,46 @@
 .status-dropdown.declined {
     background-color: #dc3545; /* red */
 }
-
 </style>
+
+<?php
+// Computed ONCE for the whole page — avoids repeating this query in five places.
+// Roles in $admin_type_roles see the full admin view (Agent Name column, Login button, etc.).
+// Everyone else is treated as an agent-type user for display/security purposes.
+$rolevalue = $this->roles_model->get($current_user->role);
+$admin_type_roles = ['platform administrator', 'office manager', 'management'];
+$is_admin_type = isset($rolevalue->name) && in_array(strtolower($rolevalue->name), $admin_type_roles);
+?>
+
 <div id="wrapper">
     <div class="content">
         <div class="row">
             <div class="col-md-12">
             <h4 class="tw-my-0 tw-font-bold tw-text-xl">ISO/Reseller Applications</h4>
             <hr>
+
+                <?php if (!empty($self_agent)): ?>
+                <!-- Self-info card: the logged-in agent's own identity, kept separate from
+                     the table below (which only lists records they actually submitted). -->
+                <div class="panel_s" style="margin-bottom: 15px;">
+                    <div class="panel-body" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap;">
+                        <div>
+                            <strong>Your Agent ID:</strong> <?= htmlspecialchars($self_agent['agent_id'] ?? '\u2014') ?>
+                            &nbsp;|&nbsp;
+                            <strong>Status:</strong> <?= htmlspecialchars($self_agent['user_status'] ?? 'Pending') ?>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-info view-agent-app" data-staffid="<?= $self_agent['staffid'] ?>">
+                                View My Application
+                            </button>
+                            <button class="btn btn-sm btn-primary view-overview" data-id="<?= $self_agent['staffid'] ?>">
+                                View Overview
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+
                 <div class="panel_s">
                     <div class="panel-body">
 
@@ -40,119 +72,97 @@
                        <table class="table dt-table table-striped" data-order-col="3" data-order-type="desc">
                         <thead>
                             <tr>
-                                <!-- <th><input type="checkbox" id="select_all"></th>  -->
-                                    <th class="text-left">Agent ID</th>
-                                   <!-- <th class="text-left">Applicant Name</th>-->
-                              <?php 
-                              $rolevalue = $this->roles_model->get($current_user->role);
-                              if (isset($rolevalue->name) && $rolevalue->name != "agent") { 
-                              ?>
-                              		<th class="text-left">Agent Name</th>
-                              <?php } ?>
-                                    <th class="text-left">Email ID</th>
-                                    <th class="text-left">Created At</th>
-                                    <th class="text-left">Status</th>
-                                	<th class="text-left">View</th>
+                                <th class="text-left">Agent ID</th>
 
-                                <?php if ($current_user->email == 'admin@dnspay.com'): ?>
-                              <th class="text-left">Login</th>
-                              <?php endif; ?> 
-                              <th class="text-left">Overview</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                                <?php if ($is_admin_type): ?>
+                                <th class="text-left">Agent Name</th>
+                                <?php endif; ?>
+
+                                <th class="text-left">Email ID</th>
+                                <th class="text-left">Created At</th>
+                                <th class="text-left">Status</th>
+                                <th class="text-left">View</th>
+
+                                <?php if (is_admin()): ?>
+                                <th class="text-left">Login</th>
+                                <?php endif; ?>
+
+                                <th class="text-left">Overview</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                             <?php foreach ($reseller_lists as $reseller_list): ?>
-             
-        
-            <tr>
-            <!-- <td><input type="checkbox" class="client_checkbox" value="<?= $reseller_list['reseller_id']; ?>"></td> -->
-                 <td class="text-left"><?= $reseller_list['agent_id'] ?? ''; ?></td>
-        <!--<td class="text-left"><?php echo $reseller_list['reseller_code']; ?></td>-->
+                            <tr>
+                                <td class="text-left"><?= $reseller_list['agent_id'] ?? ''; ?></td>
 
-<?php $rolevalue = $this->roles_model->get($current_user->role);
-if (isset($rolevalue->name) && $rolevalue->name != "agent") { ?>
-    <td>
-        <?= isset($agent_map[$reseller_list['assigned_to_agent']]) 
-     ? htmlspecialchars($agent_map[$reseller_list['assigned_to_agent']]) 
-     : ''; ?>
-    </td>
-<?php } ?>
+                                <?php if ($is_admin_type): ?>
+                                <td>
+                                    <?= isset($agent_map[$reseller_list['assigned_to_agent']])
+                                        ? htmlspecialchars($agent_map[$reseller_list['assigned_to_agent']])
+                                        : ''; ?>
+                                </td>
+                                <?php endif; ?>
 
+                                <td class="text-left"><?php echo $reseller_list['email']; ?></td>
+                                <td class="text-left"><?php echo $reseller_list['created_at']; ?></td>
+                                <td>
+                                    <select style="height: 30px !important"
+                                            class="status-dropdown form-control"
+                                            data-id="<?= $reseller_list['reseller_id'] ?>">
+                                        <option value="Approved" <?= $reseller_list['status'] == 'Approved' ? 'selected' : '' ?>>Approved</option>
+                                        <option value="Pending"  <?= $reseller_list['status'] == 'Pending' ? 'selected' : '' ?>>Pending</option>
+                                        <option value="onhold"   <?= $reseller_list['status'] == 'onhold' ? 'selected' : '' ?>>On Hold</option>
+                                        <option value="Declined" <?= $reseller_list['status'] == 'Declined' ? 'selected' : '' ?>>Declined</option>
+                                    </select>
+                                </td>
 
-        <td class="text-left"><?php echo $reseller_list['email']; ?></td>
-        <td class="text-left"><?php echo $reseller_list['created_at']; ?></td>
-<td>
-    <select style="height: 30px !important"
-            class="status-dropdown form-control"
-            data-id="<?= $reseller_list['reseller_id'] ?>">
-        <?php if (!empty($reseller_list['is_agent'])): ?>
-       <!-- Agent entries -->
-       <option value="Approved" <?= $reseller_list['status'] == 'Approved' ? 'selected' : '' ?>>Approved</option>
-            <option value="Pending"  <?= $reseller_list['status'] == 'Pending' ? 'selected' : '' ?>>Pending</option>
-        <option value="onhold"  <?= $reseller_list['status'] == 'onhold' ? 'selected' : '' ?>>On Hold</option>
-            <option value="Declined" <?= $reseller_list['status'] == 'Declined' ? 'selected' : '' ?>>Declined</option>
-          
-            
-        <?php else: ?>
-      		<option value="Approved" <?= $reseller_list['status'] == 'Approved' ? 'selected' : '' ?>>Approved</option>
-            <option value="Pending"  <?= $reseller_list['status'] == 'Pending' ? 'selected' : '' ?>>Pending</option>
-            <option value="onhold"  <?= $reseller_list['status'] == 'onhold' ? 'selected' : '' ?>>On Hold</option>
-            <option value="Declined" <?= $reseller_list['status'] == 'Declined' ? 'selected' : '' ?>>Declined</option>
-           
-        <?php endif; ?>
-    </select>
-</td>
+                                <?php if (!empty($reseller_list['is_agent'])): ?>
+                                <td class="text-left">
+                                    <button
+                                        class="btn btn-sm btn-info view-agent-app"
+                                        data-staffid="<?= $reseller_list['staffid']; ?>">
+                                        View Application
+                                    </button>
+                                </td>
+                                <?php else: ?>
+                                <td></td>
+                                <?php endif; ?>
 
+                                <?php if (is_admin()): ?>
+                                    <?php if (!empty($reseller_list['is_agent'])): ?>
+                                    <td class="text-left">
+                                       <a style="color:white"
+                                          href="<?= admin_url('reseller/login_as/' . $reseller_list['staffid']); ?>"
+                                          class="btn btn-sm btn-success"
+                                          target="_blank"
+                                          onclick="window.open(this.href, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes'); return false;">
+                                          Login
+                                       </a>
+                                    </td>
+                                    <?php else: ?>
+                                    <td></td>
+                                    <?php endif; ?>
+                                <?php endif; ?>
 
-<?php if (!empty($reseller_list['is_agent'])): ?>
-    <td class="text-left">
-        <button 
-            class="btn btn-sm btn-info view-agent-app"
-            data-staffid="<?= $reseller_list['staffid']; ?>">
-            View Application
-        </button>
-    </td>
-<?php else: ?>
-    <td></td>
-<?php endif; ?>
+                                <td>
+                                    <button class="btn btn-sm btn-primary view-overview" data-id="<?= $reseller_list['reseller_id']; ?>">View</button>
+                                    <button class="btn btn-sm btn-success add-overview" data-id="<?= $reseller_list['reseller_id']; ?>">Add</button>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                       </table>
 
-<?php if ($current_user->email == 'admin@dnspay.com'): ?>
-   
-<?php if (!empty($reseller_list['is_agent'])): ?>
-<td class="text-left">
-   <a style="color:white"
-      href="<?= admin_url('reseller/login_as/' . $reseller_list['staffid']); ?>"
-      class="btn btn-sm btn-success"
-      target="_blank"
-      onclick="window.open(this.href, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes'); return false;">
-      Login
-   </a>
-</td>
-<?php else: ?>
-  <td></td> 
-<?php endif; ?>
-<?php endif; ?>
-              
-              
-<td>        
-    <button class="btn btn-sm btn-primary view-overview" data-id="<?= $reseller_list['reseller_id']; ?>">View</button>
-    <button class="btn btn-sm btn-success add-overview" data-id="<?= $reseller_list['reseller_id']; ?>">Add</button>
-</td>
-
-              </tr>
-            <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                   
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
 <!-- Agent Application View Modal -->
 <div class="modal fade" id="viewAgentAppModal" tabindex="-1" role="dialog">
-  <div class="modal-dialog modal-xl" role="document"> <!-- wide modal -->
+  <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Agent Application</h5>
@@ -161,7 +171,6 @@ if (isset($rolevalue->name) && $rolevalue->name != "agent") { ?>
         </button>
       </div>
       <div class="modal-body" id="agentApplicationBody">
-        <!-- AJAX content goes here -->
         <p class="text-center">Loading...</p>
       </div>
     </div>
@@ -189,7 +198,6 @@ if (isset($rolevalue->name) && $rolevalue->name != "agent") { ?>
 </div>
 
 <!-- Agent View Modal -->
-
 <div class="modal fade" id="viewOverviewModal" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -201,7 +209,6 @@ if (isset($rolevalue->name) && $rolevalue->name != "agent") { ?>
     </div>
   </div>
 </div>
-
 
 <!-- Delete Reason Modal -->
 <div class="modal fade" id="deletePartnerModal" tabindex="-1" role="dialog" aria-labelledby="deletePartnerModalLabel" aria-hidden="true">
@@ -227,7 +234,9 @@ if (isset($rolevalue->name) && $rolevalue->name != "agent") { ?>
     </div>
   </div>
 </div>
+
 <?php init_tail(); ?>
+
 <script>
 $(document).on('click', '.view-agent-app', function () {
     var staffid = $(this).data('staffid');
@@ -269,11 +278,10 @@ $('#saveOverview').click(function () {
 
     if (!overview) return alert('Please enter overview');
 
-    $.post("<?= admin_url('reseller/add_agent_overview'); ?>", 
-        { agent_id: agent_id, overview: overview }, 
+    $.post("<?= admin_url('reseller/add_agent_overview'); ?>",
+        { agent_id: agent_id, overview: overview },
         function (response) {
             if (response.success) {
-                //alert('Overview added');
                 $('#addOverviewModal').modal('hide');
             } else alert(response.message);
         }, 'json'
@@ -313,8 +321,6 @@ $(document).on('click', '.view-overview', function () {
     });
 });
 
- 
-
 $(document).on('click', '.delete-partner', function () {
     var resellerId = $(this).data('id');
 
@@ -323,7 +329,6 @@ $(document).on('click', '.delete-partner', function () {
     $('#deletePartnerModal').modal('show');
 });
 
-// Confirm Delete
 $('#confirmDeletePartner').click(function () {
     var resellerId = $('#deletePartnerId').val();
     var reason = $('#deleteReason').val();
@@ -344,7 +349,7 @@ $('#confirmDeletePartner').click(function () {
         success: function (response) {
             if (response.success) {
                 alert_float('success', response.message);
-                window.location.reload(); // Reload after delete
+                window.location.reload();
             } else {
                 alert_float('danger', response.message);
             }
@@ -360,10 +365,7 @@ $('#confirmDeletePartner').click(function () {
     });
 });
 
-
-
 $(document).ready(function () {
-    // Select/Deselect All Logic
     $('#select_all').on('change', function () {
         $('.client_checkbox').prop('checked', this.checked);
     });
@@ -372,7 +374,6 @@ $(document).ready(function () {
         $('#select_all').prop('checked', $('.client_checkbox:checked').length === $('.client_checkbox').length);
     });
 
-    // Delete Selected
     $('#delete_selected').on('click', function () {
         var selectedIds = $('.client_checkbox:checked').map(function () {
             return $(this).val();
@@ -406,7 +407,6 @@ $(document).ready(function () {
         }
     });
 
-    // Status Dropdown Color and Update
     function updateStatusColor(selectElement, status) {
         selectElement.removeClass('pending approved declined onhold');
         selectElement.addClass(status.toLowerCase());
@@ -422,7 +422,7 @@ $(document).ready(function () {
 
         $.ajax({
             type: "POST",
-           url: "<?= admin_url('reseller/update_resellers_status'); ?>",
+            url: "<?= admin_url('reseller/update_resellers_status'); ?>",
             data: { id: id, status: status },
             success: function (data) {
                 console.log('Status update response:', data);
@@ -433,7 +433,8 @@ $(document).ready(function () {
         });
     });
 
-    <?php   $rolevalue = $this->roles_model->get($current_user->role); if (in_array($rolevalue->name, ['agent', 'reseller', 'partner admin'])) { ?>
+    <?php if (!$is_admin_type): ?>
+        // Devtools/right-click blocking applies to agent-type users, not admin/management roles.
         document.addEventListener('contextmenu', function (e) {
             e.preventDefault();
         });
@@ -444,11 +445,6 @@ $(document).ready(function () {
                 (e.ctrlKey && e.keyCode === 85) // Ctrl+U
             ) return false;
         };
-    <?php } ?>
+    <?php endif; ?>
 });
-
-
 </script>
-
-
-
