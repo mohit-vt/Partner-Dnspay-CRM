@@ -363,6 +363,8 @@ th.sortable::after {
           <th>Archieved</th>
           <th>Cancel</th>
            <th>Application Source</th>
+          <th>Submit to Processor</th>
+          <th>Submit to Risk</th>
         </tr>
     </thead>
               
@@ -370,9 +372,9 @@ th.sortable::after {
                   <?php  $index = 1; foreach ($combined_list as $item): 
                 
 // Detect the record type
-$is_preapp = (isset($item['merchant_status_final']) && strcasecmp($item['merchant_status_final'], 'PreAPP') === 0);
-$record_id = $is_preapp ? ($item['app_id'] ?? '') : ($item['pipeline_report_id'] ?? '');
-$record_status = $is_preapp ? 'PreApp' : 'pipeline';
+$type = $item['source_type'] ?? (!empty($item['pipeline_report_id']) ? 'pipeline' : 'preapp');
+$record_id = ($type === 'preapp') ? ($item['app_id'] ?? '') : ($item['pipeline_report_id'] ?? '');
+$record_status = ($type === 'preapp') ? 'PreApp' : 'pipeline';
 ?>
         <tr>
 
@@ -640,7 +642,7 @@ $math_id = 'match_tmf_' . $index++;
             </button>
         <?php endif; ?>
               </td>
-    <td class="<?= (!is_admin()) ? 'd-none' : '' ?>">
+    <!--<td class="<?= (!is_admin()) ? 'd-none' : '' ?>">
         <?php if (is_admin()): ?>
             <button class="btn btn-sm btn-secondary archive-record"
                     data-id="<?= $record_id ?>"
@@ -648,8 +650,16 @@ $math_id = 'match_tmf_' . $index++;
                 <i class="fa fa-archive"></i> Archive
             </button>
         <?php endif; ?>
-    </td>
-
+    </td>-->
+<td>
+    <?php if (is_admin()): ?>
+        <button class="btn btn-sm btn-secondary archive-record"
+                data-id="<?= $record_id ?>"
+                data-status="<?= $record_status ?>">
+            <i class="fa fa-archive"></i> Archive
+        </button>
+    <?php endif; ?>
+</td>
     <td>
         <select style="height:30px !important"
                 class="form-control status-dropdown cancel-status-dropdown"
@@ -661,6 +671,24 @@ $math_id = 'match_tmf_' . $index++;
     </td>
     <td>
     <?= htmlspecialchars($item['application_source'] ?? '') ?>
+</td>
+
+  <td class="text-center">
+    <button
+        class="btn btn-warning btn-sm submitProcessorBtn"
+        data-id="<?= $item['pipeline_report_id']; ?>">
+        <i class="fa fa-paper-plane"></i> Submit to Processor
+    </button>
+</td>
+
+<td class="text-center">
+
+    <a href="<?= admin_url('pipeline_report/submit_to_risk/'.$aRow['id']); ?>"
+       class="btn btn-danger btn-sm"
+       onclick="return confirm('Submit this application to Risk Management?');">
+        <i class="fa fa-shield"></i> Submit to Risk
+    </a>
+
 </td>
 
     </tr>
@@ -787,10 +815,99 @@ $math_id = 'match_tmf_' . $index++;
     </div>
   </div>
 </div>
+<div class="modal fade" id="processorModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
 
+            <div class="modal-header bg-warning">
+                <h4 class="modal-title">
+                    Submit to Processor
+                </h4>
+
+                <button type="button"
+                        class="close"
+                        data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+
+            <div class="modal-body">
+
+                <input type="hidden"
+                       id="processor_pipeline_id">
+
+                <div class="form-group">
+                    <label>Processor Notes / Comments</label>
+
+                    <textarea
+                        id="processor_notes"
+                        class="form-control"
+                        rows="6"
+                        placeholder="Enter notes for Processor..."></textarea>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button
+                    class="btn btn-secondary"
+                    data-dismiss="modal">
+                    Cancel
+                </button>
+
+                <button
+                    id="saveProcessorBtn"
+                    class="btn btn-warning">
+                    Submit
+                </button>
+
+            </div>
+
+        </div>
+    </div>
+</div>
 <?php init_tail(); ?>
  
 <script>
+  $(document).on("click",".submitProcessorBtn",function(){
+
+    $("#processor_pipeline_id").val($(this).data("id"));
+
+    $("#processor_notes").val("");
+
+    $("#processorModal").modal("show");
+
+});
+  $("#saveProcessorBtn").click(function(){
+
+    $.ajax({
+
+        url: admin_url + "pipeline_report/submit_to_processor",
+
+        type:"POST",
+
+        data:{
+
+            pipeline_id: $("#processor_pipeline_id").val(),
+
+            notes: $("#processor_notes").val()
+
+        },
+
+        success:function(response){
+
+            $("#processorModal").modal("hide");
+
+            alert_float('success','Application submitted to Processor.');
+
+            location.reload();
+
+        }
+
+    });
+
+});
 // Handle social media dropdown change
 $(document).on('change', '.social-media-select', function() {
     var id = $(this).data('id');
