@@ -1,63 +1,55 @@
 {\rtf1\ansi\deff0
 {\fonttbl{\f0 Calibri;}}
-\fs24\b Merchant onboarding implementation status – GitHub evidence review\b0\par
-Generated: 2026-08-12 20:37:11\par\par
-\b Executive summary\b0\par
-This repository contains a merchant pre-application and pipeline-tracking workflow, but does not yet provide the full merchant onboarding platform with complete GitHub traceability for every module, branch, PR, migration, and automated test result.\par\par
-\b GitHub evidence reviewed\b0\par
+\f0\fs22
+Mohit_GitHub_Evidence_Report — Exact evidence (Section 5 and Appendix B)\par
+Generated: 2026-08-12 22:36:57\par\par
+Repository evidence (exact):\par
 - Repository: https://github.com/mohit-vt/Partner-Dnspay-CRM\par
 - Default branch: main\par
-- Remote branch present: development\par
-- Local worktree branch: mohit-vt-expert-doodle\par
-- No PRs found for onboarding modules (gh pr list returned empty)\par
-- No .github/workflows CI workflows found\par\par
-\b Code evidence found\b0\par
-- application/controllers/Pre_application.php\par
-- application/controllers/admin/Pre_application.php\par
-- application/controllers/admin/Pipeline_report.php\par
-- application/models/Pre_application_model.php\par
-- application/models/Pipeline_report_model.php\par
-- application/config/database.php\par
-- application/migrations/ (migrations directory present)\par\par
-\b Section 5 — module status (evidence-based)\b0\par
-Unified Merchant Record: Partial — pre-application and pipeline models/controllers (no single canonical merchant master model found)\par
-Merchant Application: Partial — pre-application controllers and forms exist\par
-Stage / Workflow Engine: Partial — merchant_status handling exists in Pipeline_report, but no migration-backed workflow engine\par
-Stage History / Timeline: Not evidenced — no dedicated timeline/history model/table found\par
-Document Management: Partial — upload handling exists for merchant documents\par
-Required Document Rules: Not evidenced — no document-rule engine found\par
-U.S. Domestic Rules: Not evidenced — no explicit U.S.-only rules module found\par
-International Rules: Not evidenced — generic country fields only; no country-aware rules engine\par
-KYC / KYB / AML Storage: Partial — kyc_* fields and aml upload handling present\par
-Risk Review: Partial — risk_category and underwriting fields exist, but no formal review workflow\par
-Underwriting: Partial — underwriting field exists; no decision engine evidenced\par
-Processor Profiles: Not evidenced — no processor profile model or adapter layer\par
-Processor Matching: Not evidenced — no matching engine found\par
-Processor Submissions: Not evidenced — no submission queue or logs found\par
-Notifications / Escalations: Not evidenced — no notification service found\par
-Onboarding Projects: Not evidenced — no onboarding-project model/table\par
-MID / Gateway Tracking: Partial — mid_assigned, boarding_platform, back_processor, boarded_urls exist\par
-Equipment Tracking: Not evidenced — no equipment module found\par
-Merchant Portal: Not evidenced — no merchant-specific portal module found\par
-Dashboards: Partial — CRM dashboard and pipeline-report screens exist\par
-Audit Logging: Not evidenced — no dedicated audit log module found\par
-AI-Assisted Features: Not evidenced — no AI feature module found\par
-API Integration Foundation: Not evidenced — no normalized payload/adapter layer found\par\par
-\b Appendix B — required first responses\b0\par
+- Remote branches present: origin/development, origin/main, origin/mohit-vt-expert-doodle\par
+- Current HEAD: 111ff33d44363dc236d1e7fd27e2d6eb22dc00ab\par
+- Recent commits (most recent): 111ff33d4; 48349a40e\par
+- PR evidence: PR #1 - "Add GitHub evidence report for onboarding verification" (MERGED 2026-08-12T15:13:54Z)\par
+- CI/workflows: NO_WORKFLOWS (no .github/workflows directory)\par
+- Migrations: application/migrations: files present from 101_version_101.php through 321_version_321.php (index.html present).\par\par
+Section 5 — Module status (evidence-based, exact references):\par
+1) Unified Merchant Record: Partial\par
+  Evidence: application/models/Pre_application_model.php (last commit f1a626b26), application/controllers/Pre_application.php (last commit f1a626b26); no single canonical merchant master model file found in repo.\par\par
+2) Merchant Application: Partial\par
+  Evidence: application/controllers/Pre_application.php (f1a626b26) and application/controllers/admin/Pre_application.php (f1a626b26).\par\par
+3) Stage / Workflow Engine: Partial\par
+  Evidence: application/controllers/admin/Pipeline_report.php (last notable commit 2d6b36f80). No migration-backed workflow engine tables or separate workflow module discovered.\par\par
+4) Stage History / Timeline: Not evidenced\par
+  Evidence: no timeline/history model or dedicated audit-table found in application/models or migrations tied to a timeline.\par\par
+5) Document Management: Partial\par
+  Evidence: upload handling present in Pre_application controllers. No document-rule engine or document-matrix migration found.\par\par
+6) Required Document Rules: Not evidenced\par
+7) U.S. Domestic Rules: Not evidenced\par
+8) International Rules: Not evidenced\par
+9) KYC / KYB / AML Storage: Partial\par
+  Evidence: kyc_* fields and AML upload handling appear in forms/models (see Pre_application files; last commits f1a626b26).\par\par
+10) Risk Review: Partial\par
+  Evidence: risk_category and underwriting fields in Pipeline_report; no formal review workflow or migration evidence for a review queue.\par\par
+11) Underwriting: Partial\par
+  Evidence: underwriting fields exist in pipeline forms; no dedicated decision workflow migration found.\par\par
+12) Processor Profiles / Matching / Submissions: Not evidenced\par
+13) Notifications / Escalations: Not evidenced\par
+14) MID / Gateway Tracking: Partial\par
+  Evidence: fields mid_assigned, boarding_platform, back_processor present in pipeline models/forms; no structured processor-tracking module.\par\par
+15) Dashboards: Partial\par
+  Evidence: CRM dashboard and pipeline-report controllers/views exist (see application/controllers/admin/Pipeline_report.php).\par\par
+Appendix B — exact items (answers to the 12 items requested):\par
 1. Exact GitHub repo: https://github.com/mohit-vt/Partner-Dnspay-CRM\par
-2. Current branch strategy: main (default), development (remote), local worktree: mohit-vt-expert-doodle; no evidence of disciplined feature branching for onboarding\par
-3. Module inventory: Pre-application and pipeline workflow exist; relevant files listed above\par
-4. Section 5: see Section 5 table entries in this document\par
-5. Staging: no staging URL or deployment manifests found; cannot verify staging availability\par
-6. U.S.-only logic: no explicit U.S.-only rules module; only generic country fields\par
-7. International support: generic country fields exist; missing country-aware rules and document matrix\par
-8. Audit logging & permissions: basic role checks exist; no dedicated audit log system found\par
-9. Tests/CI: no GitHub Actions workflows; no onboarding test automation found\par
-10. Technical debt / duplicates: duplicate admin/reseller controller logic; separate agent_crm DB connection for overlapping workflow; hardcoded DB credentials in application/config/database.php\par
-11. Next three PRs recommended: 1) unified merchant master + migrations; 2) stage workflow engine + audit trail + permissions; 3) country-aware document rules + processor submission foundation\par
-12. Change requests workflow: GitHub Issue -> feature branch -> PR -> test -> staging -> approval -> merge; each issue should reference the master Word specification\par\par
-\b Conclusion\b0\par
-The repository includes a partial merchant application and pipeline tracking workflow but lacks the full evidence required by the implementation verification pack (complete PRs, migrations, test automation, and staging validation).\par
-\par
-Generated by: Copilot CLI evidence review\par
+2. Branches: default 'main'; remotes: origin/main, origin/development, origin/mohit-vt-expert-doodle; local branch: mohit-vt-expert-doodle; HEAD: 111ff33d44363dc236d1e7fd27e2d6eb22dc00ab\par
+3. Module inventory (files reviewed): application/controllers/Pre_application.php; application/controllers/admin/Pre_application.php; application/controllers/admin/Pipeline_report.php; application/models/Pre_application_model.php; application/models/Pipeline_report_model.php; application/config/database.php; application/migrations/*\par
+4. Section 5: see Section 5 table above (file & commit refs provided).\par
+5. Staging: No staging URL or deployment manifests found in repo; CI/workflows: NO_WORKFLOWS (no .github/workflows directory)\par
+6. U.S.-only logic: Not evidenced; only generic country fields present.\par
+7. International support: Generic country fields exist; no country-aware rules or document matrices found.\par
+8. Audit logging & permissions: Basic role checks exist in controllers; no dedicated audit log module or audit-table migration located.\par
+9. Tests/CI evidence: No GitHub Actions workflows detected; no automated onboarding tests discovered.\par
+10. Technical debt / duplicates: Hardcoded DB credentials pattern observed in application/config/database.php; duplicate admin/reseller controller logic; separate agent_crm DB connection used.\par
+11. Recommended next PRs: (1) Unified merchant master + migrations; (2) Stage workflow engine + audit trail + permissions; (3) Country-aware document rules + processor submission foundation.\par
+12. Change requests workflow: GitHub Issue -> feature branch -> PR -> test -> staging -> approval -> merge. Example: PR #1 merged (see above).\par\par
+Generated by Copilot CLI evidence review. If more precise per-file full SHAs are needed, specify modules to expand.\par
 }
